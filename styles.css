@@ -1,54 +1,43 @@
-/* 頁面基本設置 */
+/* 全局樣式 */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f9f9f9;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    height: 100vh; /* 讓頁面填滿整個視窗 */
+    background-color: #f9f9f9; /* 背景顏色 */
     text-align: center;
+    overflow: hidden; /* 防止滾動條出現 */
 }
 
-/* 頁首設置 */
+/* 頁首樣式 */
 header {
     background-color: #007bff;
     color: white;
     padding: 20px;
-    width: 100%;
-    box-sizing: border-box;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 10; /* 確保頁首在最上層 */
 }
 
-/* 主體區域 */
+/* 主要內容區 */
 main {
-    margin-top: 120px; /* 留出頁首空間 */
-    margin-bottom: 20px;
-    padding: 20px;
-    width: 100%;
-    max-width: 1200px; /* 限制最大寬度 */
+    margin: 20px;
 }
 
-/* 上傳圖片與按鈕樣式 */
-input[type="file"], button {
+/* 上傳按鈕樣式 */
+input[type="file"] {
     margin: 10px;
-    padding: 12px 20px;
+    padding: 10px;
     font-size: 16px;
     border: 1px solid #ddd;
     border-radius: 5px;
-    cursor: pointer;
 }
 
-/* 按鈕樣式 */
+/* 轉換按鈕樣式 */
 button {
     background-color: #007bff;
     color: white;
-    transition: background-color 0.3s ease;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: 1px solid #007bff;
+    border-radius: 5px;
+    cursor: pointer;
 }
 
 /* 按鈕懸停效果 */
@@ -56,21 +45,28 @@ button:hover {
     background-color: #0056b3;
 }
 
-/* 3D 模型顯示容器 */
+/* 3D 顯示區域 */
 #canvas-container {
     width: 100%;
-    height: 80vh; /* 高度佔用 80% 視窗 */
+    height: 600px; /* 調整畫布高度 */
+    margin-top: 20px;
     background-color: #eaeaea;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 20px;
-    border-radius: 10px;
+    position: relative;
 }
 
-/* 頁尾設置 */
+/* 頁尾樣式 */
 footer {
     margin-top: 30px;
     color: #777;
     font-size: 14px;
+}
+
+/* 在頁面上顯示提示文字 */
+p {
+    font-size: 18px;
+    color: #333;
+}
 }
