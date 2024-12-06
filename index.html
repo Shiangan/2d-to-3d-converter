@@ -6,24 +6,25 @@
     <title>2D to 3D Converter</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three/examples/js/loaders/GLTFLoader.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
     <header>
         <h1>2D to 3D Converter</h1>
-        <p>上傳圖片，生成 3D 模型並直接展示</p>
+        <p>上傳圖片或使用 GLB 模型，生成 3D 模型並直接展示</p>
     </header>
 
     <main>
         <input type="file" id="imageUpload" accept="image/*">
         <button id="convertButton">轉換為 3D</button>
-        <div id="output"></div>
+        <input type="file" id="modelUpload" accept=".glb,.gltf">
+        <button id="loadModelButton">加載 GLB 模型</button>
         <div id="canvas-container"></div>
     </main>
 
     <footer>
-        <p>Powered by AI and Three.js</p>
+        <p>Powered by Three.js</p>
     </footer>
 
     <script src="script.js"></script>
