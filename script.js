@@ -1,86 +1,78 @@
-// 加載圖片並生成深度圖
-async function loadImageAndGenerateDepth(imageFile) {
-    const reader = new FileReader();
+// 初始化 Three.js 場景
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 5, 10); // 設置相機位置
+camera.lookAt(0, 0, 0); // 確保相機看向場景中心
 
-    // 將圖片加載為 Base64
-    reader.onload = async (event) => {
-        const imgSrc = event.target.result;
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.outputEncoding = THREE.sRGBEncoding;
+document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-        // 顯示加載的圖片（測試用）
-        const img = new Image();
-        img.src = imgSrc;
-        document.getElementById('output').appendChild(img);
+// 添加光源
+const light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(10, 10, 10);
+scene.add(light);
 
-        // 模擬深度圖數據（這裡需要使用 AI 模型處理）
-        const depthData = await simulateDepthData(imgSrc);
+const ambientLight = new THREE.AmbientLight(0x404040, 0.5); // 環境光
+scene.add(ambientLight);
 
-        // 使用深度數據生成 3D 模型
-        create3DModel(depthData);
-    };
+// 加載高度圖與貼圖
+const loader = new THREE.TextureLoader();
+const heightmapPath = 'assets/heightmap.jpg'; // 灰階高度圖
+const texturePath = 'assets/texture.jpg'; // 貼圖材質
 
-    reader.readAsDataURL(imageFile);
-}
+loader.load(heightmapPath, (heightmap) => {
+    loader.load(texturePath, (texture) => {
+        const width = heightmap.image.width;
+        const height = heightmap.image.height;
 
-// 模擬深度數據（測試用：實際應調用 AI API 或模型）
-async function simulateDepthData(imageSrc) {
-    // 這裡可以使用 AI 模型生成深度圖
-    // 返回模擬的深度數據陣列
-    const width = 256, height = 256;
-    const depthData = new Array(width * height).fill(0).map(() => Math.random());
-    return { width, height, data: depthData };
-}
+        // 創建 Canvas 用於解析灰階高度
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext('2d');
+        context.drawImage(heightmap.image, 0, 0);
+        const imageData = context.getImageData(0, 0, width, height);
 
-// 創建 3D 模型
-function create3DModel({ width, height, data }) {
-    const container = document.getElementById('canvas-container');
+        // 創建幾何
+        const geometry = new THREE.PlaneGeometry(10, 10, width - 1, height - 1);
 
-    // 初始化 Three.js 場景
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer();
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    container.appendChild(renderer.domElement);
+        // 設置頂點高度
+        const vertices = geometry.attributes.position;
+        for (let i = 0; i < vertices.count; i++) {
+            const x = i % width;
+            const y = Math.floor(i / width);
+            const pixelIndex = (y * width + x) * 4; // 每個像素 4 個通道 (RGBA)
+            const heightValue = imageData.data[pixelIndex] / 255; // 灰階值範圍 0~1
+            vertices.setZ(i, heightValue * 3); // 設置高度 (可調整倍率)
+        }
+        geometry.computeVertexNormals(); // 更新法線
 
-    // 創建平面幾何體
-    const geometry = new THREE.PlaneGeometry(width, height, width - 1, height - 1);
+        // 創建材質與模型
+        const material = new THREE.MeshStandardMaterial({
+            map: texture, // 貼圖
+            displacementMap: heightmap, // 使用高度圖作為位移貼圖
+            displacementScale: 3, // 調整高度
+        });
 
-    // 調整頂點的 Z 坐標
-    for (let i = 0; i < geometry.attributes.position.count; i++) {
-        const z = data[i] * 10; // 放大深度數據
-        geometry.attributes.position.setZ(i, z);
-    }
-
-    geometry.computeVertexNormals();
-
-    // 材質和網格
-    const material = new THREE.MeshStandardMaterial({ color: 0x0077ff, wireframe: false });
-    const plane = new THREE.Mesh(geometry, material);
-    scene.add(plane);
-
-    // 添加光源
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(0, 1, 1);
-    scene.add(light);
-
-    // 設置攝像機位置
-    camera.position.z = 200;
-
-    // 渲染循環
-    function animate() {
-        requestAnimationFrame(animate);
-        plane.rotation.x += 0.01;
-        plane.rotation.y += 0.01;
-        renderer.render(scene, camera);
-    }
-    animate();
-}
-
-// 文件選擇事件綁定
-document.getElementById('convertButton').addEventListener('click', () => {
-    const fileInput = document.getElementById('imageUpload');
-    if (fileInput.files.length > 0) {
-        loadImageAndGenerateDepth(fileInput.files[0]);
-    } else {
-        alert("請先上傳圖片！");
-    }
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.rotation.x = -Math.PI / 2; // 調整為水平
+        scene.add(mesh);
+    });
 });
+
+// 窗口調整
+window.addEventListener('resize', () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+});
+
+// 動畫渲染循環
+function animate() {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+}
+animate();
